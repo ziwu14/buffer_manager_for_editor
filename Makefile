@@ -1,6 +1,6 @@
-CC=clang++
-CFLAGS=-std=c++17 -stdlib=libc++
-DBGFLAGS=-std=c++17 -stdlib=libc++ -g
+CC=g++
+CFLAGS=-std=c++17 -O3
+DBGFLAGS=-std=c++17 -ggdb3 -DDEBUG
 
 SRCS=$(wildcard *.cpp)
 OBJS=$(patsubst %.cpp,%.o, $(SRCS))

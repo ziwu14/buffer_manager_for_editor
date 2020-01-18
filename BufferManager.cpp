@@ -121,9 +121,11 @@ void BufferManager::insert(const string &substring, unsigned int position)
     }
     if (substring.empty()) return;
 
+    
+    stk[0].push(new Erase(substring.size(), position));
+
     Insert insert(substring, position);
     insert.execute(text);
-    stk[0].push(new Erase(substring.size(), position));
 }
 
 void BufferManager::append(const string &substring)
@@ -146,9 +148,11 @@ void BufferManager::eraseArbitrary(unsigned int size, unsigned int position)
         return;
     }
 
+    stk[0].push(new Insert(text.substr(position, size), position));
+
     Erase erase(size, position);
     erase.execute(text);
-    stk[0].push(new Insert(text.substr(position, size), position));
+    
 }
 
 void BufferManager::eraseTrail(unsigned int size)
@@ -161,9 +165,10 @@ void BufferManager::replaceAllWtih(const string &oldSubstr, const string &newSub
     //base case
     if (oldSubstr.empty()) return;
 
-    Replace replace(oldSubstr, newSubstr);
-    replace.execute(text);
     stk[0].push(new Replace(newSubstr, oldSubstr));
+
+    Replace replace(oldSubstr, newSubstr);
+    replace.execute(text);  
 }
 
 void BufferManager::undo()
@@ -188,7 +193,6 @@ void BufferManager::handleState(bool isUndo)
 
     //get last command, execute it and push to redo stack
     auto cmd = stk[i].top(); stk[i].pop();
-    cmd->execute(text);
     switch (cmd->getCommandType())
     {
         case type_insert: 
@@ -215,6 +219,7 @@ void BufferManager::handleState(bool isUndo)
         }
     }
 
+    cmd->execute(text);
     delete cmd;
 }
 
@@ -228,8 +233,7 @@ void BufferManager::load(const string &fileName)
         return;
     }
     else cout << "open on success" << endl;
-    if (infile.rdbuf()->in_avail() != 0)
-        text = string(istreambuf_iterator<char>(infile), istreambuf_iterator<char>());
+    text = string(istreambuf_iterator<char>(infile), istreambuf_iterator<char>());
     infile.close();
 }
 
