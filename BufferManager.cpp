@@ -119,6 +119,7 @@ void BufferManager::insert(const string &substring, unsigned int position)
         cerr << "insert into invalid position" << endl;
         return;
     }
+    if (substring.empty()) return;
 
     Insert insert(substring, position);
     insert.execute(text);
@@ -157,6 +158,9 @@ void BufferManager::eraseTrail(unsigned int size)
 
 void BufferManager::replaceAllWtih(const string &oldSubstr, const string &newSubstr)
 {
+    //base case
+    if (oldSubstr.empty()) return;
+
     Replace replace(oldSubstr, newSubstr);
     replace.execute(text);
     stk[0].push(new Replace(newSubstr, oldSubstr));
@@ -178,8 +182,10 @@ void BufferManager::handleState(bool isUndo)
     int i, j;
     if (isUndo) i = 0, j = 1;
     else i = 1, j = 0;
+
     //base case
     if (stk[i].empty()) return;
+
     //get last command, execute it and push to redo stack
     auto cmd = stk[i].top(); stk[i].pop();
     cmd->execute(text);
@@ -228,7 +234,7 @@ void BufferManager::load(const string &fileName)
 
 void BufferManager::save(const string &fileName) const
 {
-    ofstream outfile(fileName);
+    ofstream outfile(fileName, std::ofstream::trunc);
     if (!outfile.is_open())
     {
         cerr << "save(): Fail to open file: " + fileName << endl; 
@@ -249,5 +255,7 @@ int main()
     bm->replaceAllWtih("abcde", "12345");//12345
     bm->eraseTrail(5);//
     bm->append("a");//a
+    for (int i=0; i<5; ++i) bm->undo();
+    for (int i=0; i<5; ++i) bm->redo();
     bm->save("abc.txt");
 }
