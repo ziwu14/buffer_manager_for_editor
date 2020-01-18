@@ -1,3 +1,4 @@
+
 #include <iostream>
 #include <fstream>
 #include <iterator>
@@ -20,8 +21,8 @@ class Command
 public:
     Command() {}
     virtual ~Command() {}
-    virtual void execute(string &text) = 0;
-    virtual CommandType getCommandType() = 0;
+    virtual void execute(string &text) const = 0;
+    virtual CommandType getCommandType() const = 0;
 };
 
 class Insert : public Command
@@ -35,16 +36,16 @@ public:
     Insert(const string &s, unsigned int p) : substring(s), position(p) {}
     virtual ~Insert() {}
     //methods
-    virtual void execute(string &text)
+    virtual void execute(string &text) const
     {
         text.insert(position, substring);
     }
-    virtual CommandType getCommandType()
+    virtual CommandType getCommandType() const
     {
         return type_insert;
     }
     //getters
-    string getSubstr() {return substring;}
+    string getSubstr() const {return substring;}
     unsigned int getPosition() {return position;}
 };
 
@@ -58,17 +59,17 @@ public:
     Erase(unsigned int n, unsigned p) : size(n), position(p) {}
     virtual ~Erase() {}
     //methods
-    virtual void execute(string &text)
+    virtual void execute(string &text) const
     {
         text.erase(position, size);
     }
-    virtual CommandType getCommandType()
+    virtual CommandType getCommandType() const
     {
         return type_erase;
     }
     //getters
-    unsigned int getSize() {return size;}
-    unsigned int getPosition() {return position;}
+    unsigned int getSize() const {return size;}
+    unsigned int getPosition() const {return position;}
 };
 
 class Replace : public Command
@@ -81,7 +82,7 @@ public:
     Replace(const string &oldS, const string &newS) : oldSubstr(oldS), newSubstr(newS) {}
     virtual ~Replace() {}
     //methods
-    virtual void execute(string &text)
+    virtual void execute(string &text) const
     {
         size_t it, oldSize = oldSubstr.size();
         while ((it = text.find(oldSubstr)) != std::string::npos)
@@ -89,13 +90,13 @@ public:
             text.replace(it, oldSize, newSubstr);
         }
     }
-    virtual CommandType getCommandType()
+    virtual CommandType getCommandType() const
     {
         return type_replace;
     }
     //getters
-    string getOldSubstr() {return oldSubstr;}
-    string getNewSubstr() {return newSubstr;}
+    string getOldSubstr() const {return oldSubstr;}
+    string getNewSubstr() const {return newSubstr;}
 };
 
 class BufferManager
@@ -225,4 +226,9 @@ void BufferManager::save(const string &fileName)
     }
     outfile << text;
     outfile.close();
+}
+
+int main()
+{
+    
 }
