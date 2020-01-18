@@ -36,14 +36,8 @@ public:
     Insert(const string &s, unsigned int p) : substring(s), position(p) {}
     virtual ~Insert() {}
     //methods
-    virtual void execute(string &text) const
-    {
-        text.insert(position, substring);
-    }
-    virtual CommandType getCommandType() const
-    {
-        return type_insert;
-    }
+    virtual void execute(string &text) const { text.insert(position, substring); }
+    virtual CommandType getCommandType() const { return type_insert; }
     //getters
     string getSubstr() const {return substring;}
     unsigned int getPosition() {return position;}
@@ -59,14 +53,8 @@ public:
     Erase(unsigned int n, unsigned p) : size(n), position(p) {}
     virtual ~Erase() {}
     //methods
-    virtual void execute(string &text) const
-    {
-        text.erase(position, size);
-    }
-    virtual CommandType getCommandType() const
-    {
-        return type_erase;
-    }
+    virtual void execute(string &text) const { text.erase(position, size); }
+    virtual CommandType getCommandType() const { return type_erase; }
     //getters
     unsigned int getSize() const {return size;}
     unsigned int getPosition() const {return position;}
@@ -86,17 +74,12 @@ public:
     {
         size_t it, oldSize = oldSubstr.size();
         while ((it = text.find(oldSubstr)) != std::string::npos)
-        {
             text.replace(it, oldSize, newSubstr);
-        }
     }
-    virtual CommandType getCommandType() const
-    {
-        return type_replace;
-    }
+    virtual CommandType getCommandType() const { return type_replace; }
     //getters
-    string getOldSubstr() const {return oldSubstr;}
-    string getNewSubstr() const {return newSubstr;}
+    string getOldSubstr() const { return oldSubstr; }
+    string getNewSubstr() const { return newSubstr; }
 };
 
 class BufferManager
@@ -119,7 +102,7 @@ public:
     void undo();
     void redo();
     void load(const string &fileName);
-    void save(const string &fileName);
+    void save(const string &fileName) const;
 };
 
 BufferManager::~BufferManager()
@@ -130,6 +113,13 @@ BufferManager::~BufferManager()
 
 void BufferManager::insert(const string &substring, unsigned int position)
 {
+    //base case
+    if (position < 0 || position > text.size())
+    {
+        cerr << "insert into invalid position" << endl;
+        return;
+    }
+
     Insert insert(substring, position);
     insert.execute(text);
     stk[0].push(new Erase(substring.size(), position));
@@ -142,6 +132,19 @@ void BufferManager::append(const string &substring)
 
 void BufferManager::eraseArbitrary(unsigned int size, unsigned int position)
 {
+    //base case
+    if (position < 0 || position >= text.size())
+    {
+        cerr << "erase at invalid position" << endl;
+        return;
+    }
+    if (size == 0) return;
+    if (size < 0)
+    {
+        cerr << "erase with wrong size" << endl;
+        return;
+    }
+
     Erase erase(size, position);
     erase.execute(text);
     stk[0].push(new Insert(text.substr(position, size), position));
@@ -183,21 +186,27 @@ void BufferManager::handleState(bool isUndo)
     switch (cmd->getCommandType())
     {
         case type_insert: 
+        {
             Insert * insert = dynamic_cast<Insert *>(cmd);
             auto size = insert->getSubstr().size();
             auto position = insert->getPosition();
             stk[j].push(new Erase(size, position)); 
             break;
+        } 
         case type_erase:
+        {
             Erase * erase = dynamic_cast<Erase *>(cmd);
-            auto size = erase->getSize();
+            auto sz = erase->getSize();
             auto position = erase->getPosition();
-            stk[j].push(new Insert(text.substr(position, size), position)); 
+            stk[j].push(new Insert(text.substr(position, sz), position)); 
             break;
+        }
         case type_replace:
+        {
             Replace * replace = dynamic_cast<Replace *>(cmd);
             stk[j].push(new Replace(replace->getNewSubstr(), replace->getOldSubstr())); 
             break;
+        }
     }
 
     delete cmd;
@@ -212,11 +221,12 @@ void BufferManager::load(const string &fileName)
         cerr << "load(): Fail to open file: " + fileName << endl; 
         return;
     }
+    else cout << "open on success" << endl;
     text = string(istreambuf_iterator<char>(infile), istreambuf_iterator<char>());
     infile.close();
 }
 
-void BufferManager::save(const string &fileName)
+void BufferManager::save(const string &fileName) const
 {
     ofstream outfile(fileName);
     if (!outfile.is_open())
@@ -224,11 +234,20 @@ void BufferManager::save(const string &fileName)
         cerr << "save(): Fail to open file: " + fileName << endl; 
         return;
     }
+    else cout << "open on success" << endl;
     outfile << text;
     outfile.close();
 }
 
 int main()
 {
-    
+    BufferManager * bm = new BufferManager();
+    bm->load("abc.txt");
+    bm->append("abcde");//abcde
+    bm->insert("abc", 1);//aabcbcde
+    bm->eraseArbitrary(3, 1);//abcde
+    bm->replaceAllWtih("abcde", "12345");//12345
+    bm->eraseTrail(5);//
+    bm->append("a");//a
+    bm->save("abc.txt");
 }
