@@ -9,11 +9,17 @@
 
 using namespace std;
 
+/*
+OOP design skills
+1.enum for polymorphism @ i.e. subclass id ### enum的本质就是translation to increase readability
+2.dynamic_cast<T*> @ up-cast, down-cast, sideway-cast
+*/
+
 enum CommandType
 {
-    type_insert,
-    type_erase,
-    type_replace
+    TYPE_INSERT,
+    TYPE_ERASE,
+    TYPE_REPLACE
 };
 
 class Command
@@ -37,10 +43,10 @@ public:
     virtual ~Insert() {}
     //methods
     virtual void execute(string &text) const { text.insert(position, substring); }
-    virtual CommandType getCommandType() const { return type_insert; }
+    virtual CommandType getCommandType() const { return TYPE_INSERT; }
     //getters
     string getSubstr() const {return substring;}
-    unsigned int getPosition() {return position;}
+    unsigned int getPosition() const {return position;}
 };
 
 class Erase : public Command
@@ -54,7 +60,7 @@ public:
     virtual ~Erase() {}
     //methods
     virtual void execute(string &text) const { text.erase(position, size); }
-    virtual CommandType getCommandType() const { return type_erase; }
+    virtual CommandType getCommandType() const { return TYPE_ERASE; }
     //getters
     unsigned int getSize() const {return size;}
     unsigned int getPosition() const {return position;}
@@ -76,7 +82,7 @@ public:
         while ((it = text.find(oldSubstr)) != std::string::npos)
             text.replace(it, oldSize, newSubstr);
     }
-    virtual CommandType getCommandType() const { return type_replace; }
+    virtual CommandType getCommandType() const { return TYPE_REPLACE; }
     //getters
     string getOldSubstr() const { return oldSubstr; }
     string getNewSubstr() const { return newSubstr; }
@@ -87,6 +93,10 @@ class BufferManager
 private:
     string text;
     stack<Command *> stk[2]; //stk[0] for undos, stk[1] for redos
+    enum StackType 
+    {
+        kUndo = 0, kRedo = 1
+    };
     void handleState(bool isUndo);
 
 public:
@@ -185,8 +195,8 @@ void BufferManager::handleState(bool isUndo)
 {
     //choose either undo or redo stack;
     int i, j;
-    if (isUndo) i = 0, j = 1;
-    else i = 1, j = 0;
+    if (isUndo) i = kUndo, j = kRedo;
+    else i = kRedo, j = kUndo;
 
     //base case
     if (stk[i].empty()) return;
@@ -195,7 +205,7 @@ void BufferManager::handleState(bool isUndo)
     auto cmd = stk[i].top(); stk[i].pop();
     switch (cmd->getCommandType())
     {
-        case type_insert: 
+        case TYPE_INSERT: 
         {
             Insert * insert = dynamic_cast<Insert *>(cmd);
             auto size = insert->getSubstr().size();
@@ -203,7 +213,7 @@ void BufferManager::handleState(bool isUndo)
             stk[j].push(new Erase(size, position)); 
             break;
         } 
-        case type_erase:
+        case TYPE_ERASE:
         {
             Erase * erase = dynamic_cast<Erase *>(cmd);
             auto sz = erase->getSize();
@@ -211,7 +221,7 @@ void BufferManager::handleState(bool isUndo)
             stk[j].push(new Insert(text.substr(position, sz), position)); 
             break;
         }
-        case type_replace:
+        case TYPE_REPLACE:
         {
             Replace * replace = dynamic_cast<Replace *>(cmd);
             stk[j].push(new Replace(replace->getNewSubstr(), replace->getOldSubstr())); 
@@ -232,7 +242,7 @@ void BufferManager::load(const string &fileName)
         cerr << "load(): Fail to open file: " + fileName << endl; 
         return;
     }
-    else cout << "open on success" << endl;
+    else cout << "open for loading on success" << endl;
     text = string(istreambuf_iterator<char>(infile), istreambuf_iterator<char>());
     infile.close();
 }
@@ -245,7 +255,7 @@ void BufferManager::save(const string &fileName) const
         cerr << "save(): Fail to open file: " + fileName << endl; 
         return;
     }
-    else cout << "open on success" << endl;
+    else cout << "open for saving on success" << endl;
     outfile << text;
     outfile.close();
 }
