@@ -228,7 +228,8 @@ void BufferManager::load(const string &fileName)
         return;
     }
     else cout << "open on success" << endl;
-    text = string(istreambuf_iterator<char>(infile), istreambuf_iterator<char>());
+    if (infile.rdbuf()->in_avail() != 0)
+        text = string(istreambuf_iterator<char>(infile), istreambuf_iterator<char>());
     infile.close();
 }
 
