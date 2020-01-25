@@ -18,8 +18,8 @@ void Insert::execute(string &text) const { text.insert(position, substring); }
 void Erase::execute(string &text) const { text.erase(position, substring.size()); }
 void Replace::execute(string &text) const
 {
-    size_t it, oldSize = oldSubstr.size();
-    while ((it = text.find(oldSubstr)) != std::string::npos)
+    size_t it = 0, oldSize = oldSubstr.size();
+    while ((it = text.find(oldSubstr, it)) != std::string::npos)
         text.replace(it, oldSize, newSubstr);
 }
 
