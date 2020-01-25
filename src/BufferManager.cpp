@@ -12,8 +12,8 @@ BufferManager::BufferManager() {}
 
 BufferManager::~BufferManager()
 {
-    while(stk[0].size()) delete stk[0].top(), stk[0].pop();
-    while(stk[1].size()) delete stk[1].top(), stk[1].pop();
+    while(stk[kUndo].size()) delete stk[kUndo].top(), stk[kUndo].pop();
+    while(stk[kRedo].size()) delete stk[kRedo].top(), stk[kRedo].pop();
 }
 
 //methods
@@ -28,7 +28,7 @@ void BufferManager::insert(const string &substring, unsigned int position)
     if (substring.empty()) return;
 
     Insert insert(substring, position);
-    stk[0].push(insert.createReverseCommand());
+    stk[kUndo].push(insert.createReverseCommand());
     insert.execute(text);
 }
 
@@ -53,7 +53,7 @@ void BufferManager::eraseArbitrary(unsigned int size, unsigned int position)
     }
 
     Erase erase(text.substr(position, size), position);
-    stk[0].push(erase.createReverseCommand());
+    stk[kUndo].push(erase.createReverseCommand());
     erase.execute(text);
     
 }
@@ -69,7 +69,7 @@ void BufferManager::replaceAllWtih(const string &oldSubstr, const string &newSub
     if (oldSubstr.empty()) return;
 
     Replace replace(oldSubstr, newSubstr);
-    stk[0].push(replace.createReverseCommand());
+    stk[kUndo].push(replace.createReverseCommand());
     replace.execute(text);  
 }
 
